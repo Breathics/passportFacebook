@@ -1,6 +1,6 @@
+// Load in our modules
 const express = require('express');
-// const session = require('express-session');
-const morgan = require('morgan');
+const morgan = require('morgan'); // Logger middleware for terminal
 const bodyParser = require('body-parser');
 const path = require('path');
 const mysql = require('mysql');
@@ -11,6 +11,8 @@ const PORT = 8000;
 const passport = require('passport');
 const Strategy = require('passport-facebook');
 const credentials = require('./facebookCreds.js');
+const session = require('express-session');
+
 
 const pool = mysql.createPool({
 	connectionLimit: 10,
@@ -19,46 +21,28 @@ const pool = mysql.createPool({
 	password: 'root',
 	database: 'mangos',
 	port: 8889
-})
-
-// pool.getConnection(function(err, connection) {
-// 	console.log("This is the connection");
-// 	connection.release();
-// })
-
-// pool.on('acquire', function (connection) {
-//   console.log('Connection %d acquired', connection.threadId);
-// });
-
-// pool.on('enqueue', function () {
-//   console.log('Waiting for available connection slot');
-// });
-
-// pool.on('release', function (connection) {
-//   console.log('Connection %d released', connection.threadId);
-// });
-
+});
 
 passport.use(new Strategy(credentials, // First argument accepts an object for clientID, clientSecret, and callbackURL
 	function (accessToken, refreshToken, profile, cb) {
-		// let sql = "SELECT * FROM ?? WHERE ?? = ?"
-		// let inserts = ['users', 'facebookid', profile.id];
-		// sql = mysql.format(sql, inserts);
-		// pool.query(sql, function(err, results, fields) {
-		// 	debugger
-		// 	if (err) throw err;
-		// 	console.log("These are the results", results);
-		// 	if (results.length == 0) {
-		// 		let { displayName, id } = profile;
-		// 		let sql = "INSERT INTO ??(??, ??) VALUES (?, ?)";
-		// 		let inserts = ['users', 'facebookid', 'displayName', id, displayName];
-		// 		sql = mysql.format(sql, inserts);
-		// 		pool.query(sql, function(err, results, fields) {
-		// 			if (err) throw err;
-		// 			console.log("This is the new id: ", results.insertId);
-		// 		});
-		// 	}
-		// })
+		let sql = "SELECT * FROM ?? WHERE ?? = ?"
+		let inserts = ['users', 'facebookid', profile.id];
+		sql = mysql.format(sql, inserts);
+		pool.query(sql, function(err, results, fields) {
+			debugger
+			if (err) throw err;
+			console.log("These are the results", results);
+			if (results.length == 0) {
+				let { displayName, id } = profile;
+				let sql = "INSERT INTO ??(??, ??) VALUES (?, ?)";
+				let inserts = ['users', 'facebookid', 'displayName', id, displayName];
+				sql = mysql.format(sql, inserts);
+				pool.query(sql, function(err, results, fields) {
+					if (err) throw err;
+					console.log("This is the new id: ", results.insertId);
+				});
+			}
+		})
 		return cb(null, profile);
 	}));
 
@@ -67,13 +51,13 @@ app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// app.use(session({
-//   secret: 'keyboard cat',
-//   resave: true,
-//   saveUninitialized: true
-// }));
+app.use(session({
+  secret: 'keyboard cat',
+  resave: true,
+  saveUninitialized: true
+}));
 app.use(passport.initialize());
-// app.use(passport.session());
+app.use(passport.session());
 
 passport.serializeUser(function(user, cb) {
   cb(null, user);
@@ -92,6 +76,8 @@ app.get('/',
 
 app.get('/home',
 	function(req, res) {
+		debugger
+		console.log("This is the session data", req.session);		
 		res.sendFile(path.resolve('client', 'logout.html'));
 	}
 );
