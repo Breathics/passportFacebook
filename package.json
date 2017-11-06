@@ -1,0 +1,15 @@
+{
+  "name": "passport-facebook",
+  "version": "1.0.0",
+  "description": "Facebook OAuth prototype to authenticate users",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Express",
+    "Passport"
+  ],
+  "author": "Andy Ong",
+  "license": "ISC"
+}
