@@ -1,5 +1,5 @@
 const express = require('express');
-const session = require('express-session');
+// const session = require('express-session');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -41,24 +41,24 @@ const pool = mysql.createPool({
 
 passport.use(new Strategy(credentials, // First argument accepts an object for clientID, clientSecret, and callbackURL
 	function (accessToken, refreshToken, profile, cb) {
-		let sql = "SELECT * FROM ?? WHERE ?? = ?"
-		let inserts = ['users', 'facebookid', profile.id];
-		sql = mysql.format(sql, inserts);
-		pool.query(sql, function(err, results, fields) {
-			debugger
-			if (err) throw err;
-			console.log("These are the results", results);
-			if (results.length == 0) {
-				let { displayName, id } = profile;
-				let sql = "INSERT INTO ??(??, ??) VALUES (?, ?)";
-				let inserts = ['users', 'facebookid', 'displayName', id, displayName];
-				sql = mysql.format(sql, inserts);
-				pool.query(sql, function(err, results, fields) {
-					if (err) throw err;
-					console.log("This is the new id: ", results.insertId);
-				});
-			}
-		})
+		// let sql = "SELECT * FROM ?? WHERE ?? = ?"
+		// let inserts = ['users', 'facebookid', profile.id];
+		// sql = mysql.format(sql, inserts);
+		// pool.query(sql, function(err, results, fields) {
+		// 	debugger
+		// 	if (err) throw err;
+		// 	console.log("These are the results", results);
+		// 	if (results.length == 0) {
+		// 		let { displayName, id } = profile;
+		// 		let sql = "INSERT INTO ??(??, ??) VALUES (?, ?)";
+		// 		let inserts = ['users', 'facebookid', 'displayName', id, displayName];
+		// 		sql = mysql.format(sql, inserts);
+		// 		pool.query(sql, function(err, results, fields) {
+		// 			if (err) throw err;
+		// 			console.log("This is the new id: ", results.insertId);
+		// 		});
+		// 	}
+		// })
 		return cb(null, profile);
 	}));
 
@@ -67,13 +67,13 @@ app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use(session({
-  secret: 'keyboard cat',
-  resave: true,
-  saveUninitialized: true
-}));
+// app.use(session({
+//   secret: 'keyboard cat',
+//   resave: true,
+//   saveUninitialized: true
+// }));
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 passport.serializeUser(function(user, cb) {
   cb(null, user);
@@ -90,9 +90,9 @@ app.get('/',
 	}
 );
 
-app.get('/luigi',
+app.get('/home',
 	function(req, res) {
-		res.sendFile(path.resolve('client', 'success.html'));
+		res.sendFile(path.resolve('client', 'logout.html'));
 	}
 );
 
@@ -103,13 +103,12 @@ app.get('/login/facebook',
 app.get('/login/facebook/return', 
 	passport.authenticate('facebook', { failureRedirect: '/' }),
 	function(req, res) {
-		res.redirect('/luigi');
+		res.redirect('/home');
 	}
 );
 
 app.get('/logout',
 	function(req, res){
-		req.logout();
 		res.redirect('/');
 	}
 );
