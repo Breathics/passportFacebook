@@ -17,6 +17,7 @@ const pool = mysql.createPool({
 	host: 'localhost',
 	user: 'root',
 	password: 'root',
+	database: 'mangos',
 	port: 8889
 })
 
@@ -40,11 +41,24 @@ const pool = mysql.createPool({
 
 passport.use(new Strategy(credentials, // First argument accepts an object for clientID, clientSecret, and callbackURL
 	function (accessToken, refreshToken, profile, cb) {
-		// In this example, the user's Facebook profile is supplied as the user
-		// record.  In a production-quality application, the Facebook profile should
-		// be associated with a user record in the application's database, which
-		// allows for account linking and authentication with other identity
-		// providers.
+		let sql = "SELECT * FROM ?? WHERE ?? = ?"
+		let inserts = ['users', 'facebookid', profile.id];
+		sql = mysql.format(sql, inserts);
+		pool.query(sql, function(err, results, fields) {
+			debugger
+			if (err) throw err;
+			console.log("These are the results", results);
+			if (results.length == 0) {
+				let { displayName, id } = profile;
+				let sql = "INSERT INTO ??(??, ??) VALUES (?, ?)";
+				let inserts = ['users', 'facebookid', 'displayName', id, displayName];
+				sql = mysql.format(sql, inserts);
+				pool.query(sql, function(err, results, fields) {
+					if (err) throw err;
+					console.log("This is the new id: ", results.insertId);
+				});
+			}
+		})
 		return cb(null, profile);
 	}));
 
@@ -76,13 +90,26 @@ app.get('/',
 	}
 );
 
+app.get('/luigi',
+	function(req, res) {
+		res.sendFile(path.resolve('client', 'success.html'));
+	}
+);
+
 app.get('/login/facebook',
 	passport.authenticate('facebook')
 );
 
 app.get('/login/facebook/return', 
-	passport.authenticate('facebook', { failureRedirect: '/login' }),
+	passport.authenticate('facebook', { failureRedirect: '/' }),
 	function(req, res) {
+		res.redirect('/luigi');
+	}
+);
+
+app.get('/logout',
+	function(req, res){
+		req.logout();
 		res.redirect('/');
 	}
 );
