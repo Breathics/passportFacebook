@@ -67,7 +67,6 @@ passport.deserializeUser(function(obj, cb) {
   cb(null, obj);
 });
 
-
 app.get('/',
 	function(req, res) {
 		res.sendFile(path.resolve('client', 'index.html'));
@@ -98,7 +97,6 @@ app.get('/logout',
 		res.redirect('/');
 	}
 );
-
 
 app.listen(PORT, () => {
 	console.log("Server started on PORT", PORT);
